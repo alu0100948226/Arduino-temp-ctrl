@@ -5,7 +5,7 @@ const int inc = A5, dec = A4;
 const int t = A0;
 const int ventilador = 10;
 const int cicles = 5000;
-int time = 0;
+unsigned long int time = 0;
 
 const int k = 50;
 
@@ -18,10 +18,8 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 int prevDec = 0;
 int prevInc = 0;
 int currCicle = 0;
-int tPulsoInc = 0;
-int tPulsoDec = 0;
-int incStable = 0;
-int decStable = 0;
+unsigned long int tPulsoInc = 0;
+unsigned long int tPulsoDec = 0;
 
 int t_deseada = 22;
 
@@ -107,6 +105,4 @@ void loop() {
     time = millis();
     //lcd.write(temperature);
   }
-  
-  currCicle = (currCicle + 1)%cicles;
 }
