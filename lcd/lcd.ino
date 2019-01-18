@@ -1,13 +1,20 @@
 #include <LiquidCrystal.h>
+#include "Encoder.h"
 
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 const int inc = A5, dec = A4;
 const int t = A0;
 const int ventilador = 10;
+const int calefactor = 9;
 const int cicles = 5000;
 unsigned long int time = 0;
 
-const int k = 50;
+const int pinA = A2;
+const int pinB = A3;
+Encoder enc(pinA,pinB);
+
+const int k = 40;
+const float T_INICIAL = 22.0;
 
 char temp[7];
 
@@ -21,7 +28,7 @@ int currCicle = 0;
 unsigned long int tPulsoInc = 0;
 unsigned long int tPulsoDec = 0;
 
-int t_deseada = 22;
+float t_deseada = 22;
 
 void float_to_chars(float data, char * r){
   
@@ -43,14 +50,20 @@ void setup() {
   pinMode(dec, INPUT);
   pinMode(t,   INPUT);
   pinMode(ventilador, OUTPUT);
+  pinMode(calefactor, OUTPUT);
   analogWrite(ventilador, 255);
+  analogWrite(calefactor, 255);
   
   // initialize the serial communications:
   Serial.begin(9600);
 }
 
 void loop() {
-  int currInc = digitalRead(inc);
+  int in = enc.read();
+  float new_t = in;
+  t_deseada = T_INICIAL + new_t*0.1;
+  Serial.println(t_deseada);
+  /*int currInc = digitalRead(inc);
   int currDec = digitalRead(dec);
   
   if(!prevInc && currInc)
@@ -68,7 +81,7 @@ void loop() {
   }
   
   prevInc = currInc;
-  prevDec = currDec;
+  prevDec = currDec;*/
     
   
     
@@ -77,9 +90,11 @@ void loop() {
   float voltage = sensorValue * (5.0 / 1023.0);
   voltage /= 11;
   float temperature = voltage*100;
+  Serial.println(temperature);
   
   float error = t_deseada - temperature;
-  int command = 255 + error*k;
+  
+  int command = (error < 0)? 255 + error*k: 255-error*k;
   if (command < 0){
     command = 0;
   } 
@@ -87,7 +102,16 @@ void loop() {
     command = 255;
   }
   
-  analogWrite(ventilador,command);
+  if (error <= -0.5){
+    analogWrite(ventilador,command);
+    analogWrite(calefactor,255);
+    Serial.println("Activado el ventilador");
+  }
+  if (error >= 0.5){
+    analogWrite(calefactor,command);
+    analogWrite(ventilador,255);
+    Serial.println("Activado el calefactor");
+  }
   //float error = t_deseada - temperature;
   
   // when characters arrive over the serial port...
